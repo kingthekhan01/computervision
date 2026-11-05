@@ -1,0 +1,15 @@
+# 이 폴더에는 다른 과제 파일도 있어서, 올릴 파일만 골라서 허용(whitelist)
+/*
+
+!.gitignore
+!README.md
+!requirements.txt
+!morphology_1106.py
+!KNN1106.py
+!12345.png
+!closer.png
+!results/
+
+# CIFAR-10 데이터(약 170MB)는 올리지 않음 — 실행 시 자동 다운로드
+data/
+__pycache__/
