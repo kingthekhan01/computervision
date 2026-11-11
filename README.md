@@ -64,6 +64,10 @@ CIFAR-10 데이터는 처음 실행할 때 `data/` 폴더에 자동으로 다운
 
 전체 콘솔 출력(fold별 결과 포함): [`results/knn_result.txt`](results/knn_result.txt)
 
+## 3. CIFAR-10 선형 분류 · 소벨 윤곽 채널 비교
+
+동일한 CIFAR-10 전체 데이터와 `L2=0.001`로 RGB 입력과 RGB+소벨 입력을 비교했습니다. [성능 그래프, fold별 점수, 클래스별 혼동 행렬](sobel_comparison/README.md)을 확인할 수 있습니다.
+
 ## 실행 방법
 
 ```bash
