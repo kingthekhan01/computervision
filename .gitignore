@@ -10,7 +10,9 @@
 !closer.png
 !results/
 !sobel_comparison/
+!linear_classifier_1118/
 
 # CIFAR-10 데이터(약 170MB)는 올리지 않음 — 실행 시 자동 다운로드
 data/
 __pycache__/
+

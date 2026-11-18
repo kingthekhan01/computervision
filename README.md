@@ -1,4 +1,4 @@
-# 영상처리 과제 (11/06)
+# 컴퓨터 비전 과제
 
 ## 1. Morphology — `morphology_1106.py`
 
@@ -68,6 +68,10 @@ CIFAR-10 데이터는 처음 실행할 때 `data/` 폴더에 자동으로 다운
 
 동일한 CIFAR-10 전체 데이터와 `L2=0.001`로 RGB 입력과 RGB+소벨 입력을 비교했습니다. [성능 그래프, fold별 점수, 클래스별 혼동 행렬](sobel_comparison/README.md)을 확인할 수 있습니다.
 
+## 4. 선형 분류 과제 (11/18) — 무작위 가중치
+
+난수 시드를 고정한 `W`와 0으로 설정한 `b`로 `f(x)=Wx+b`, 다중 클래스 SVM hinge loss, Softmax를 직접 계산합니다. 예시 이미지의 클래스별 점수·확률 표, 정답·오답 사례, 가중치 시각화와 설명은 [11월 18일 과제 보고서](linear_classifier_1118/README.md)에서 확인할 수 있습니다.
+
 ## 실행 방법
 
 ```bash
@@ -75,3 +79,4 @@ pip install -r requirements.txt
 python morphology_1106.py
 python KNN1106.py
 ```
+

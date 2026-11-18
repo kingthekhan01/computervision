@@ -1,0 +1,81 @@
+seed=42, W standard deviation=0.01, delta=1.0
+W.shape=(10, 3072), b.shape=(10,)
+test indices=[0, 1, 2, 3, 5]
+
+Test #0: true=cat, predicted=dog, correct=False
+class          score         probability    hinge margin
+airplane     -0.32678640    0.05425105     0.85843734
+automobile    0.11930238    0.08475046     1.30452612
+bird          0.02430126    0.07706969     1.20952500
+cat          -0.18522374    0.06250115     0.00000000
+deer          0.18690861    0.09067823     1.37213235
+dog           0.77119056    0.16264978     1.95641430
+frog          0.54259297    0.12941208     1.72781670
+horse         0.64648304    0.14357992     1.83170678
+ship          0.53149754    0.12798413     1.71672128
+truck        -0.11387439    0.06712351     1.07134935
+SVM hinge loss=13.04862921
+Probability sum=1.000000000000, isclose(1)=True
+
+Test #1: true=ship, predicted=frog, correct=False
+class          score         probability    hinge margin
+airplane     -0.67018859    0.04001324     0.00000000
+automobile   -0.22952611    0.06217002     0.03707930
+bird         -0.07069645    0.07287186     0.19590897
+cat          -0.56225541    0.04457368     0.00000000
+deer          0.09400680    0.08591907     0.36061222
+dog           0.55919307    0.13680986     0.82579849
+frog          1.10800609    0.23684480     1.37461150
+horse         0.34484360    0.11041462     0.61144901
+ship          0.73339459    0.16284414     0.00000000
+truck        -0.49785462    0.04753871     0.00000000
+SVM hinge loss=3.40545949
+Probability sum=1.000000000000, isclose(1)=True
+
+Test #2: true=ship, predicted=frog, correct=False
+class          score         probability    hinge margin
+airplane     -0.62970649    0.04239115     0.00000000
+automobile   -0.02523594    0.07758780     0.28784121
+bird         -0.00914300    0.07884651     0.30393415
+cat          -0.53437290    0.04663136     0.00000000
+deer          0.06984530    0.08532704     0.38292245
+dog           0.58160225    0.14234424     0.89467940
+frog          0.83457119    0.18331707     1.14764834
+horse         0.43275359    0.12265796     0.74583074
+ship          0.68692285    0.15815395     0.00000000
+truck        -0.23760015    0.06274293     0.07547700
+SVM hinge loss=3.83833329
+Probability sum=1.000000000000, isclose(1)=True
+
+Test #3: true=airplane, predicted=frog, correct=False
+class          score         probability    hinge margin
+airplane     -0.65682140    0.03923245     0.00000000
+automobile    0.06887298    0.08106072     1.72569438
+bird          0.00519339    0.07605973     1.66201479
+cat          -0.72282105    0.03672672     0.93400034
+deer          0.18791931    0.09130859     1.84474071
+dog           0.79153434    0.16697764     2.44835574
+frog          0.86702597    0.18007106     2.52384737
+horse         0.42235402    0.11543177     2.07917542
+ship          0.76755188    0.16302074     2.42437327
+truck        -0.41209358    0.05011057     1.24472782
+SVM hinge loss=16.88692983
+Probability sum=1.000000000000, isclose(1)=True
+
+Test #5: true=frog, predicted=frog, correct=True
+class          score         probability    hinge margin
+airplane     -0.31490621    0.05972554     0.00804074
+automobile    0.08172817    0.08880067     0.40467512
+bird         -0.06777345    0.07646955     0.25517351
+cat          -0.38444707    0.05571330     0.00000000
+deer          0.15968770    0.09600053     0.48263465
+dog           0.53787429    0.14012576     0.86082125
+frog          0.67705305    0.16105067     0.00000000
+horse         0.36542741    0.11793026     0.68837437
+ship          0.50869980    0.13609672     0.83164676
+truck        -0.18387984    0.06808699     0.13906711
+SVM hinge loss=3.67043351
+Probability sum=1.000000000000, isclose(1)=True
+
+Mean SVM hinge loss (5 examples)=8.16995707
+W and b are identical to their initial values.
