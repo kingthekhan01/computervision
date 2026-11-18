@@ -14,6 +14,10 @@ CIFAR-10 이미지에서 무작위로 초기화한 선형 분류기의 클래스
 
 공식 테스트 10,000장을 같은 시드 18의 가중치로 예측했다. 각 실제 클래스에는 1,000장이 있다. 행은 실제 클래스, 열은 `argmax`로 선택한 예측 클래스다. 각 칸은 해당 실제 클래스의 이미지 중 그 열로 분류된 비율이며 행의 합은 100%다. `automobile`은 자동차(CAR), `airplane`은 비행기, `ship`은 배에 해당한다.
 
+![파란색 혼동 행렬 히트맵](confusion_matrix.png)
+
+`visualize_confusion_matrix(class_tables, class_names)` 함수가 `cmap="Blues"`로 히트맵을 그린다. 칸의 색이 진할수록 해당 예측의 비율이 높다. 코드를 실행하면 `confusion_matrix.png`에 저장한다.
+
 | 실제 / 예측 | airplane | automobile | bird | cat | deer | dog | frog | horse | ship | truck |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | airplane | 1.60% | 57.80% | 0.10% | 3.80% | 18.30% | 0.10% | 10.70% | 7.50% | 0.00% | 0.10% |

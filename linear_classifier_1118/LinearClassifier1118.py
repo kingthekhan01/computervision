@@ -6,6 +6,7 @@ import json
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.ticker import PercentFormatter
 import numpy as np
 from torchvision.datasets import CIFAR10
 
@@ -127,6 +128,24 @@ def visualize_weights(model, class_names):
     plt.close(fig)
 
 
+def visualize_confusion_matrix(class_tables, class_names):
+    rates = np.asarray(class_tables["prediction_rates"])
+    fig, ax = plt.subplots(figsize=(11, 9), layout="constrained")
+    image = ax.imshow(rates, cmap="Blues", vmin=0, vmax=1)
+    ax.set_xticks(range(len(class_names)), class_names, rotation=45, ha="right")
+    ax.set_yticks(range(len(class_names)), class_names)
+    ax.set_xlabel("Predicted class")
+    ax.set_ylabel("True class")
+    ax.set_title(f"CIFAR-10 confusion matrix | random weights, seed={SEED}\n"
+                 f"{class_tables['sample_count']:,} test images | rows sum to 100%")
+    for (row, column), value in np.ndenumerate(rates):
+        ax.text(column, row, f"{value:.2%}", ha="center", va="center", fontsize=8,
+                color="white" if value > 0.5 else "#18344C")
+    fig.colorbar(image, ax=ax, format=PercentFormatter(1.0), label="Prediction share", shrink=0.85)
+    fig.savefig(OUTPUT_DIR / "confusion_matrix.png", dpi=150)
+    plt.close(fig)
+
+
 def markdown_table(headers, rows):
     lines = ["| " + " | ".join(headers) + " |",
              "| " + " | ".join("---" for _ in headers) + " |"]
@@ -160,6 +179,10 @@ def write_report(result):
         "각 실제 클래스에는 1,000장이 있다. 행은 실제 클래스, 열은 `argmax`로 선택한 예측 클래스다. "
         "각 칸은 해당 실제 클래스의 이미지 중 그 열로 분류된 비율이며 행의 합은 100%다. "
         "`automobile`은 자동차(CAR), `airplane`은 비행기, `ship`은 배에 해당한다.",
+        "![파란색 혼동 행렬 히트맵](confusion_matrix.png)",
+        "`visualize_confusion_matrix(class_tables, class_names)` 함수가 "
+        "`cmap=\"Blues\"`로 히트맵을 그린다. 칸의 색이 진할수록 해당 예측의 비율이 높다. "
+        "코드를 실행하면 `confusion_matrix.png`에 저장한다.",
         markdown_table(
             ["실제 / 예측", *class_names],
             [[name, *[f"{value:.2%}" for value in row]]
@@ -333,6 +356,7 @@ def main():
                 writer.writerow([name, *row])
     visualize_examples(dataset, examples)
     visualize_weights(model, dataset.classes)
+    visualize_confusion_matrix(class_tables, dataset.classes)
     write_report(result)
 
 
