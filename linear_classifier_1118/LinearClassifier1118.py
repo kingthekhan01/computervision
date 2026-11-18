@@ -11,7 +11,7 @@ from torchvision.datasets import CIFAR10
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 OUTPUT_DIR = Path(__file__).resolve().parent
-SEED = 42
+SEED = 18
 WEIGHT_SCALE = 0.01
 DELTA = 1.0
 
@@ -19,12 +19,10 @@ DELTA = 1.0
 class MyLinearClassifier:
     def __init__(self, input_size=3072, num_classes=10):
         rng = np.random.default_rng(SEED)
-        # 각 행은 해당 클래스의 가중치 벡터. W=(10, 3072), b=(10,).
         self.W = rng.normal(0.0, WEIGHT_SCALE, (num_classes, input_size))
         self.b = np.zeros(num_classes)
 
     def score(self, x):
-        # 한 이미지 x=(3072,)에 대해 클래스 점수 10개 계산.
         return self.W @ x + self.b
 
     def predict(self, x):
@@ -32,26 +30,22 @@ class MyLinearClassifier:
 
 
 def svm_hinge_loss(scores, correct_label):
-    # 정답 점수가 다른 클래스 점수보다 delta 이상 높아야 한다.
     margins = np.maximum(0.0, scores - scores[correct_label] + DELTA)
     margins[correct_label] = 0.0
     return float(np.sum(margins)), margins
 
 
 def softmax(scores):
-    # 최댓값을 빼도 확률은 같고, exp의 오버플로를 막을 수 있다.
     shifted_scores = scores - np.max(scores)
     exp_scores = np.exp(shifted_scores)
     return exp_scores / np.sum(exp_scores)
 
 
 def select_examples(dataset, model):
-    # 먼저 테스트 이미지 0~3번을 선택한다.
     selected = [0, 1, 2, 3]
     first_correct = None
     first_wrong = None
 
-    # 같은 초기 가중치로 순서대로 찾아 정답/오답 사례를 하나씩 확보한다.
     for index, image in enumerate(dataset.data):
         x = image.reshape(-1).astype(np.float32) / 255.0
         prediction = model.predict(x)
@@ -73,7 +67,7 @@ def visualize_examples(dataset, examples):
     rows = (len(examples) + columns - 1) // columns
     fig, axes = plt.subplots(rows, columns, figsize=(10, 3.5 * rows), squeeze=False,
                              layout="constrained")
-    fig.suptitle("CIFAR-10 examples | random weights, seed=42", fontsize=15)
+    fig.suptitle(f"CIFAR-10 examples | random weights, seed={SEED}", fontsize=15)
     for ax in axes.flat:
         ax.set_axis_off()
     for ax, example in zip(axes.flat, examples):
@@ -88,10 +82,8 @@ def visualize_examples(dataset, examples):
 
 
 def visualize_weights(model, class_names):
-    # RGB의 순서로 펼친 입력과 같은 순서로 각 클래스의 행을 복원한다.
     weights = model.W.reshape(10, 32, 32, 3)
     max_abs = np.max(np.abs(weights))
-    # 모든 클래스에 같은 표시 범위 적용. 0은 0.5, -max_abs는 0, +max_abs는 1.
     displayed = 0.5 + weights / (2 * max_abs)
     fig, axes = plt.subplots(2, 5, figsize=(12, 5.4), layout="constrained")
     fig.suptitle("Random class weights | 32 x 32 x 3 | shared display scale", fontsize=15)
@@ -127,6 +119,8 @@ def write_report(result):
         f"가중치 `W`는 평균 0, 표준편차 {WEIGHT_SCALE}의 정규분포에서 뽑았고, "
         "편향 `b`는 0으로 설정했다. `W.shape=(10, 3072)`, `b.shape=(10,)`이며 "
         "행 번호가 클래스 번호에 해당한다. 초기화한 가중치와 편향을 사용해 계산했다.",
+        "선형 분류기는 `f(x)=Wx+b`로 각 클래스의 점수를 계산하고 `argmax`로 예측한다. "
+        "이 구현은 무작위 초기 가중치를 사용하는 선형 분류기의 순전파 과정이다.",
         "## 클래스 점수와 예측",
         "```python\nscores = W @ x + b\nprediction = np.argmax(scores)\n```",
         "먼저 테스트 인덱스 0~3을 선택했다. 같은 가중치로 테스트 이미지를 앞에서부터 "
@@ -135,6 +129,20 @@ def write_report(result):
         "![선택한 이미지의 실제 클래스와 예측](examples.png)",
         markdown_table(["테스트 인덱스", "실제 클래스", "최고 점수 클래스", "분류 결과",
                         "SVM hinge loss", "Softmax 확률 합"], overview),
+        "## 클래스별 점수 비교",
+        "행은 클래스, 열은 선택한 테스트 이미지다. 각 열에서 가장 높은 점수의 클래스가 예측 결과다.",
+        markdown_table(
+            ["클래스 번호", "클래스", *[f"테스트 #{row['index']}" for row in examples]],
+            [[index, name, *[f"{row['scores'][index]:.8f}" for row in examples]]
+             for index, name in enumerate(result["class_names"])],
+        ),
+        "## 클래스별 Softmax 확률 비교",
+        "각 열의 10개 확률을 더하면 1이다. 아래 수치는 반올림해 표시했다.",
+        markdown_table(
+            ["클래스 번호", "클래스", *[f"테스트 #{row['index']}" for row in examples]],
+            [[index, name, *[f"{row['probabilities'][index]:.8f}" for row in examples]]
+             for index, name in enumerate(result["class_names"])],
+        ),
         "## SVM hinge loss와 Softmax 계산",
         "정답 클래스가 `y`, 클래스 점수가 `s`, 마진이 `delta=1`일 때 이미지별 손실은 다음과 같다.",
         r"$$L_i=\sum_{j\ne y_i}\max(0,\ s_j-s_{y_i}+1)$$",
@@ -187,7 +195,7 @@ def write_report(result):
         "저장소 루트에서 실행한다. 기존 `data/`의 CIFAR-10을 사용하며, 필요한 경우 "
         "`--download` 옵션으로 공식 데이터를 내려받을 수 있다.",
         "```bash\npip install -r requirements.txt\npython linear_classifier_1118/LinearClassifier1118.py\n"
-        "# 데이터가 없을 때\npython linear_classifier_1118/LinearClassifier1118.py --download\n```",
+        "python linear_classifier_1118/LinearClassifier1118.py --download\n```",
         "[소스 코드](LinearClassifier1118.py) · [실행 결과](result.txt) · [원래 수치](result.json)",
         "## 데이터 출처",
         "Alex Krizhevsky, Learning Multiple Layers of Features from Tiny Images, 2009. "
