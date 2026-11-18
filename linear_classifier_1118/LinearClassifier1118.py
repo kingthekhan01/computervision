@@ -1,5 +1,6 @@
 from pathlib import Path
 import argparse
+import csv
 import json
 
 import matplotlib
@@ -39,6 +40,37 @@ def softmax(scores):
     shifted_scores = scores - np.max(scores)
     exp_scores = np.exp(shifted_scores)
     return exp_scores / np.sum(exp_scores)
+
+
+def class_probability_tables(dataset, model):
+    num_classes = len(dataset.classes)
+    counts = np.zeros((num_classes, num_classes), dtype=np.int64)
+    probability_sums = np.zeros((num_classes, num_classes))
+    labels = np.asarray(dataset.targets)
+    support = np.bincount(labels, minlength=num_classes)
+
+    for start in range(0, len(dataset), 256):
+        images = dataset.data[start:start + 256]
+        X = images.reshape(len(images), -1).astype(np.float32) / 255.0
+        scores = X @ model.W.T + model.b
+        predictions = np.argmax(scores, axis=1)
+        shifted_scores = scores - np.max(scores, axis=1, keepdims=True)
+        probabilities = np.exp(shifted_scores)
+        probabilities /= np.sum(probabilities, axis=1, keepdims=True)
+        true_labels = labels[start:start + len(images)]
+        np.add.at(counts, (true_labels, predictions), 1)
+        np.add.at(probability_sums, true_labels, probabilities)
+
+    prediction_rates = counts / support[:, None]
+    mean_probabilities = probability_sums / support[:, None]
+    assert np.allclose(prediction_rates.sum(axis=1), 1.0)
+    assert np.allclose(mean_probabilities.sum(axis=1), 1.0)
+    return {
+        "sample_count": len(dataset), "support": support.tolist(),
+        "confusion_counts": counts.tolist(),
+        "prediction_rates": prediction_rates.tolist(),
+        "mean_softmax_probabilities": mean_probabilities.tolist(),
+    }
 
 
 def select_examples(dataset, model):
@@ -104,6 +136,8 @@ def markdown_table(headers, rows):
 
 def write_report(result):
     examples = result["examples"]
+    class_tables = result["class_tables"]
+    class_names = result["class_names"]
     overview = [[row["index"], row["true_class"], row["predicted_class"],
                  "정답" if row["correct"] else "오답", f"{row['hinge_loss']:.8f}",
                  f"{row['probability_sum']:.12f}"] for row in examples]
@@ -121,6 +155,29 @@ def write_report(result):
         "행 번호가 클래스 번호에 해당한다. 초기화한 가중치와 편향을 사용해 계산했다.",
         "선형 분류기는 `f(x)=Wx+b`로 각 클래스의 점수를 계산하고 `argmax`로 예측한다. "
         "이 구현은 무작위 초기 가중치를 사용하는 선형 분류기의 순전파 과정이다.",
+        "## 실제 클래스 × 예측 클래스 · 10×10 혼동 행렬",
+        f"공식 테스트 {class_tables['sample_count']:,}장을 같은 시드 {SEED}의 가중치로 예측했다. "
+        "각 실제 클래스에는 1,000장이 있다. 행은 실제 클래스, 열은 `argmax`로 선택한 예측 클래스다. "
+        "각 칸은 해당 실제 클래스의 이미지 중 그 열로 분류된 비율이며 행의 합은 100%다. "
+        "`automobile`은 자동차(CAR), `airplane`은 비행기, `ship`은 배에 해당한다.",
+        markdown_table(
+            ["실제 / 예측", *class_names],
+            [[name, *[f"{value:.2%}" for value in row]]
+             for name, row in zip(class_names, class_tables["prediction_rates"])],
+        ),
+        "예를 들어 `automobile` 행의 `airplane` 열은 실제 자동차 1,000장 중 비행기로 "
+        "분류된 비율이다. 무작위 가중치에서는 몇몇 클래스에 예측이 집중될 수 있다.",
+        "[분류 비율 CSV](prediction_rates.csv) · [원래 이미지 수 CSV](confusion_counts.csv)",
+        "## 실제 클래스 × 출력 클래스 · 평균 Softmax 확률",
+        "각 실제 클래스의 이미지 1,000장에 대해 Softmax 확률을 구한 뒤 클래스별로 평균했다. "
+        "행의 10개 값을 합하면 100%다. 위 혼동 행렬은 최고 점수 클래스 하나에 집계하고, "
+        "이 표는 이미지마다 출력된 10개 확률을 모두 반영한다. 아래 수치는 반올림해 표시했다.",
+        markdown_table(
+            ["실제 / 출력", *class_names],
+            [[name, *[f"{value:.2%}" for value in row]]
+             for name, row in zip(class_names, class_tables["mean_softmax_probabilities"])],
+        ),
+        "[평균 Softmax 확률 CSV](mean_softmax_probabilities.csv)",
         "## 클래스 점수와 예측",
         "```python\nscores = W @ x + b\nprediction = np.argmax(scores)\n```",
         "먼저 테스트 인덱스 0~3을 선택했다. 같은 가중치로 테스트 이미지를 앞에서부터 "
@@ -244,20 +301,36 @@ def main():
         lines += [f"SVM hinge loss={loss:.8f}",
                   f"Probability sum={probability_sum:.12f}, isclose(1)={example['sum_is_one']}"]
 
+    class_tables = class_probability_tables(dataset, model)
     assert np.array_equal(model.W, initial_W)
     assert np.array_equal(model.b, initial_b)
     result = {"seed": SEED, "weight_scale": WEIGHT_SCALE, "delta": DELTA,
               "W_shape": list(model.W.shape), "b_shape": list(model.b.shape),
               "numpy_version": np.__version__, "class_names": dataset.classes,
               "first_correct": first_correct, "first_wrong": first_wrong,
-              "examples": examples,
+              "examples": examples, "class_tables": class_tables,
               "mean_hinge_loss": float(np.mean([row["hinge_loss"] for row in examples]))}
     lines += [f"\nMean SVM hinge loss ({len(examples)} examples)={result['mean_hinge_loss']:.8f}",
               "W and b are identical to their initial values."]
+    for title, key in [("10 x 10 prediction rates", "prediction_rates"),
+                       ("10 x 10 mean Softmax probabilities", "mean_softmax_probabilities")]:
+        lines += ["\n" + title, markdown_table(
+            ["True / Output", *dataset.classes],
+            [[name, *[f"{value:.2%}" for value in row]]
+             for name, row in zip(dataset.classes, class_tables[key])],
+        )]
     output = "\n".join(lines) + "\n"
     print(output)
     (OUTPUT_DIR / "result.txt").write_text(output, encoding="utf-8")
     (OUTPUT_DIR / "result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    for filename, key in [("confusion_counts.csv", "confusion_counts"),
+                          ("prediction_rates.csv", "prediction_rates"),
+                          ("mean_softmax_probabilities.csv", "mean_softmax_probabilities")]:
+        with (OUTPUT_DIR / filename).open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.writer(stream)
+            writer.writerow(["true_class", *dataset.classes])
+            for name, row in zip(dataset.classes, class_tables[key]):
+                writer.writerow([name, *row])
     visualize_examples(dataset, examples)
     visualize_weights(model, dataset.classes)
     write_report(result)
