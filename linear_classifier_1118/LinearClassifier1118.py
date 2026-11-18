@@ -277,6 +277,10 @@ def write_report(result):
         "```bash\npip install -r requirements.txt\npython linear_classifier_1118/LinearClassifier1118.py\n"
         "python linear_classifier_1118/LinearClassifier1118.py --download\n```",
         "[소스 코드](LinearClassifier1118.py) · [실행 결과](result.txt) · [원래 수치](result.json)",
+        "## RGB와 경계 채널 추가 비교",
+        "같은 시드 18과 RGB 가중치를 공유한 RGB 모델과 RGB+소벨 모델의 결과는 "
+        "[4채널 입력 비교 보고서](rgb_sobel_comparison/README.md)에 정리했다. "
+        "[비교 코드](CompareRGBSobel1118.py)를 실행하면 표와 파란색 혼동 행렬을 생성한다.",
         "## 데이터 출처",
         "Alex Krizhevsky, Learning Multiple Layers of Features from Tiny Images, 2009. "
         "[CIFAR-10 공식 페이지](https://cave.cs.toronto.edu/kriz/cifar.html)",
