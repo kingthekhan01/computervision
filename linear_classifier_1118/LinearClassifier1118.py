@@ -164,6 +164,21 @@ def write_report(result):
         "# 선형 분류 과제 · 11월 18일",
         "CIFAR-10 이미지에서 무작위로 초기화한 선형 분류기의 클래스 점수, "
         "다중 클래스 SVM hinge loss, Softmax 확률을 확인한다.",
+        "## 과제 요구 사항 확인",
+        markdown_table(
+            ["요구 사항", "구현 및 실행 결과"],
+            [
+                ["작은 무작위 W, b=0, 시드 고정", f"정규분포 표준편차 {WEIGHT_SCALE}, b=0, seed={SEED}"],
+                ["학습 없이 계산", "계산 전후 W와 b가 초기값과 동일함을 assert로 확인"],
+                ["f(x)=Wx+b와 예측", "MyLinearClassifier.score에서 W @ x + b, argmax로 예측"],
+                ["예시별 10개 클래스 점수", f"예시 {len(examples)}개에 대해 클래스별 점수 표 제시"],
+                ["다중 클래스 SVM hinge loss", f"delta=1, 정답 클래스 제외, 예시 평균 {result['mean_hinge_loss']:.8f}"],
+                ["Softmax 확률과 합 확인", "원래 점수와 확률을 나란히 표시, 모든 예시에서 합이 1임을 확인"],
+                ["정답 및 오답 사례 설명", f"첫 정답 테스트 #{result['first_correct']}, 첫 오답 테스트 #{result['first_wrong']}"],
+                ["클래스별 W 시각화와 이유 설명", "10개 클래스의 W를 각각 32×32×3으로 복원하고 무작위 패턴의 이유 설명"],
+                ["소스, 실행 결과, 설명", "LinearClassifier1118.py, result.txt, result.json, 이 README와 이미지 파일"],
+            ],
+        ),
         "## 입력과 가중치 초기화",
         "공식 테스트 세트의 RGB 이미지를 사용했다. 이미지 한 장의 크기는 32×32×3이다. "
         "`torchvision`이 반환한 `(높이, 너비, RGB)` 순서의 배열을 길이 3,072로 펼치고 "
